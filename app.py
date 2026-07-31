@@ -1,8 +1,31 @@
+import importlib
+import pickle
 from pathlib import Path
 
-import joblib
 import pandas as pd
 import streamlit as st
+
+
+def _load_joblib_module():
+    """Load joblib when available and fall back to pickle otherwise."""
+    try:
+        return importlib.import_module("joblib")
+    except ModuleNotFoundError:
+        class _FallbackJoblib:
+            @staticmethod
+            def load(path):
+                with open(path, "rb") as handle:
+                    return pickle.load(handle)
+
+            @staticmethod
+            def dump(value, path):
+                with open(path, "wb") as handle:
+                    pickle.dump(value, handle)
+
+        return _FallbackJoblib()
+
+
+joblib = _load_joblib_module()
 
 
 APP_TITLE = "Sleep Pattern Checker"
